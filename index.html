@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101014">
+  <title>Pocket's Arcade</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #101014;
+      color: #f4f2fa;
+      font-family: system-ui, sans-serif;
+    }
+
+    header {
+      padding: 22px 7%;
+      border-bottom: 1px solid #292832;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-size: 25px;
+      font-weight: 850;
+      letter-spacing: -1px;
+    }
+
+    .logo span { color: #a78bfa; }
+
+    .hero {
+      padding: 75px 7% 45px;
+      background: radial-gradient(ellipse at top, #292044, #101014 68%);
+    }
+
+    .hero h1 {
+      font-size: clamp(38px, 7vw, 68px);
+      letter-spacing: -3px;
+      margin: 0 0 14px;
+    }
+
+    .hero p { color: #aaa7b9; }
+
+    .search {
+      margin-top: 25px;
+      width: 100%;
+      max-width: 500px;
+      padding: 15px 17px;
+      background: #1b1a23;
+      border: 1px solid #393644;
+      border-radius: 10px;
+      color: white;
+      font-size: 16px;
+    }
+
+    main { padding: 20px 7% 70px; }
+
+    .games {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .game {
+      min-height: 145px;
+      background: #1a1922;
+      border: 1px solid #302e3b;
+      border-radius: 13px;
+      padding: 20px;
+      transition: transform .18s, border-color .18s;
+    }
+
+    .game:hover {
+      transform: translateY(-4px);
+      border-color: #9b7aff;
+    }
+
+    .game .emoji { font-size: 30px; }
+    .game h3 { margin: 15px 0 6px; }
+    .game p { color: #aaa7b9; font-size: 13px; }
+
+    footer {
+      padding: 25px 7%;
+      border-top: 1px solid #292832;
+      color: #858293;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">pocket<span>'s</span> arcade</div>
+    <span>Game library</span>
+  </header>
+
+  <section class="hero">
+    <h1>Your next game<br>is waiting.</h1>
+    <p>A little corner of the internet for your favorite games.</p>
+    <input
+      class="search"
+      id="search"
+      type="search"
+      placeholder="Search games..."
+      aria-label="Search games"
+    >
+  </section>
+
+  <main>
+    <h2>Explore games</h2>
+    <div class="games" id="games">
+      <article class="game" data-name="coming soon">
+        <div class="emoji">🎮</div>
+        <h3>Coming soon</h3>
+        <p>Your next favorite game belongs here.</p>
+      </article>
+      <article class="game" data-name="more games">
+        <div class="emoji">🕹️</div>
+        <h3>More games</h3>
+        <p>The library is just getting started.</p>
+      </article>
+      <article class="game" data-name="arcade">
+        <div class="emoji">✨</div>
+        <h3>Arcade classics</h3>
+        <p>More experiences coming soon.</p>
+      </article>
+    </div>
+    <p id="empty" hidden>No games match your search.</p>
+  </main>
+
+  <footer>Pocket's Arcade · Play responsibly.</footer>
+
+  <script>
+    const search = document.getElementById("search");
+    const games = [...document.querySelectorAll(".game")];
+    const empty = document.getElementById("empty");
+
+    search.addEventListener("input", () => {
+      const query = search.value.toLowerCase().trim();
+      let visible = 0;
+
+      games.forEach(game => {
+        const matches = game.dataset.name.includes(query);
+        game.hidden = !matches;
+        if (matches) visible++;
+      });
+
+      empty.hidden = visible !== 0;
+    });
+  </script>
+</body>
+</html>
