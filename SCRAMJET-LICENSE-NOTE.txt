@@ -1,0 +1,2 @@
+Scramjet bootstrap package @mercuryworkshop/proxy-bootstrap is licensed AGPL-3.0-only.
+Review the full package license in node_modules/@mercuryworkshop/proxy-bootstrap after npm install.

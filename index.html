@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="/bootstrap-init.js"></script>
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Pocket's Arcade — a space to browse, explore, and play.">
+  <title>Pocket's Arcade</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080808;
+      --bg-2: #141414;
+      --panel: rgba(13, 13, 13, .92);
+      --panel-solid: #090909;
+      --panel-raised: #181818;
+      --line: rgba(216, 62, 84, .16);
+      --line-strong: rgba(216, 62, 84, .30);
+      --text: color-mix(in srgb, #ffffff 94%, var(--accent) 6%);
+      --muted: color-mix(in srgb, #b8b8b8 82%, var(--accent) 18%);
+      --muted-2: color-mix(in srgb, #858585 78%, var(--accent) 22%);
+      --accent: #d83e54;
+      --accent-strong: #fa5369;
+      --accent-glow: rgba(216, 62, 84, .25);
+      --accent-soft: rgba(216, 62, 84, .12);
+      --green: #68e4a1;
+      --shadow: 0 22px 75px rgba(0, 0, 0, .28);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --max-width: 1180px;
+    }
+    * { box-sizing: border-box; }
+    @media (hover: hover) and (pointer: fine) {
+      body { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 2 L5 19 L9.5 14.8 L13 22 L16 20.5 L12.5 13.5 L19 13 Z' fill='%23d83e54' stroke='%23ffd9df' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") 5 2, auto; }
+      button, a, [role="button"], input[type="color"] { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M5 2 L5 19 L9.5 14.8 L13 22 L16 20.5 L12.5 13.5 L19 13 Z' fill='%23a91e35' stroke='%23ffd9df' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") 5 2, pointer; }
+    }
+    html { min-height: 100%; background: linear-gradient(180deg, #141414 0%, #080808 100%); scroll-behavior: smooth; }
+    body {
+      min-height: 100vh; margin: 0; overflow-x: hidden;
+      color: var(--text); background: linear-gradient(180deg, #141414 0%, #080808 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: -.01em; -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--accent-strong); outline-offset: 3px; }
+    ::selection { background: var(--accent); color: white; }
+
+    #particle-bg {
+      position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0;
+      pointer-events: none; opacity: .8;
+    }
+    .ambient {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background: linear-gradient(180deg, rgba(20, 20, 20, .04), rgba(8, 8, 8, .12));
+    }
+    .app { position: relative; z-index: 1; min-height: 100vh; display: flex; flex-direction: column; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      width: min(var(--max-width), calc(100% - 56px)); margin: 0 auto; padding: 25px 0 20px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 13px; min-width: 0; }
+    .brand-mark {
+      width: 44px; height: 44px; flex: 0 0 44px; position: relative; display: grid; place-items: center;
+      border-radius: 15px; border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+      background: linear-gradient(145deg, color-mix(in srgb, var(--accent) 35%, #35101a), #220b12);
+      box-shadow: 0 0 30px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,.1);
+    }
+    .brand-mark svg { width: 24px; height: 24px; color: #fff3f5; }
+    .brand-name { font-weight: 850; font-size: 19px; line-height: 1.08; letter-spacing: -.055em; white-space: nowrap; }
+    .brand-sub { margin-top: 5px; color: var(--green); font-size: 11px; line-height: 1; font-weight: 750; letter-spacing: .07em; }
+    .nav { display: flex; align-items: center; gap: 7px; padding: 5px; border: 1px solid var(--line); border-radius: 15px; background: rgba(12, 12, 12, .84); }
+    .nav-btn {
+      border: 0; background: transparent; color: var(--muted); cursor: pointer; border-radius: 10px;
+      display: inline-flex; align-items: center; gap: 8px; padding: 11px 15px; font-size: 13px; font-weight: 700;
+      transition: background .3s ease, color .3s ease, transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
+    }
+    .nav-btn svg { width: 16px; height: 16px; }
+    .nav-btn:hover { color: var(--text); background: rgba(255,255,255,.06); transform: translateY(-1px); box-shadow: 0 5px 18px rgba(0,0,0,.16); }
+    .nav-btn.active { color: var(--text); background: var(--accent-soft); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 27%, transparent); }
+    .nav-btn.active svg { color: var(--accent-strong); }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .status-pill { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 12px rgba(104, 228, 161, .7); }
+
+    main { width: min(var(--max-width), calc(100% - 56px)); margin: 0 auto; flex: 1; }
+    .view { display: none; animation: viewIn .35s ease both; }
+    .view.active { display: block; }
+    @keyframes viewIn { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    .home-view { padding: clamp(58px, 10vh, 104px) 0 78px; }
+    .hero { text-align: center; max-width: 790px; margin: 0 auto; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 9px; text-transform: uppercase; letter-spacing: .17em; font-weight: 800; font-size: 10px; color: var(--accent-strong); }
+    .eyebrow::before, .eyebrow::after { content: ""; height: 1px; width: 24px; background: linear-gradient(90deg, transparent, var(--accent)); }
+    .eyebrow::after { transform: rotate(180deg); }
+    h1 { margin: 20px 0 14px; font-size: clamp(42px, 6.6vw, 76px); line-height: .98; letter-spacing: -.075em; font-weight: 850; }
+    h1 .headline-accent { color: var(--accent-strong); text-shadow: 0 0 36px var(--accent-glow); }
+    .hero-copy { color: var(--muted); line-height: 1.7; font-size: 15px; max-width: 460px; margin: 0 auto; }
+    .search-shell {
+      margin: 34px auto 0; display: flex; align-items: center; gap: 12px; max-width: 720px; padding: 8px 8px 8px 19px;
+      border: 1px solid var(--line-strong); border-radius: 17px; background: linear-gradient(135deg, rgba(16, 16, 16, .98), rgba(7, 7, 7, .98));
+      box-shadow: 0 0 0 5px rgba(216,62,84,.025), 0 19px 55px rgba(0,0,0,.23), 0 0 48px var(--accent-glow);
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .search-shell:focus-within { border-color: color-mix(in srgb, var(--accent) 75%, white 8%); box-shadow: 0 0 0 5px var(--accent-soft), 0 18px 55px rgba(0,0,0,.24); }
+    .search-icon { color: var(--accent-strong); width: 20px; height: 20px; flex: 0 0 auto; }
+    .search-input { width: 100%; min-width: 0; outline: 0; border: 0; color: var(--text); background: transparent; font-size: 15px; padding: 12px 0; }
+    .search-input::placeholder { color: var(--muted-2); }
+    .go-btn, .primary-btn {
+      border: 0; cursor: pointer; border-radius: 11px; color: white; font-weight: 800; font-size: 13px;
+      background: linear-gradient(135deg, var(--accent-strong), var(--accent)); padding: 13px 20px;
+      box-shadow: 0 7px 24px var(--accent-glow); transition: filter .3s ease, transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s ease;
+    }
+    .go-btn:hover, .primary-btn:hover { filter: brightness(1.12); transform: translateY(-2px); box-shadow: 0 10px 30px var(--accent-glow); }
+    .search-hint { display: flex; justify-content: center; gap: 6px; align-items: center; margin-top: 12px; color: var(--muted-2); font-size: 11px; }
+    .keycap { border: 1px solid var(--line-strong); background: rgba(255,255,255,.025); border-radius: 5px; padding: 2px 5px; color: var(--muted); font-size: 10px; }
+    .quick-section { width: min(700px, 100%); margin: 46px auto 0; }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+    .section-heading h2 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .13em; color: var(--muted); font-weight: 800; }
+    .section-heading span { font-size: 11px; color: var(--muted-2); }
+    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .quick-link {
+      display: flex; align-items: center; gap: 12px; text-align: left; min-width: 0; padding: 15px 13px;
+      border: 1px solid var(--line); border-radius: 14px; background: rgba(13, 13, 13, .82); cursor: pointer;
+      transition: transform .32s cubic-bezier(.2,.8,.2,1), border-color .32s ease, background .32s ease, box-shadow .32s ease;
+    }
+    .quick-link:hover { transform: translateY(-4px) scale(1.015); background: var(--panel-solid); border-color: var(--line-strong); box-shadow: 0 10px 28px rgba(0,0,0,.22), 0 0 20px var(--accent-glow); }
+    .quick-icon { transition: transform .36s cubic-bezier(.2,.8,.2,1), filter .36s ease; }
+    .quick-link:hover .quick-icon { transform: scale(1.08) rotate(-4deg); filter: brightness(1.12); }
+    .nav-btn, .tool-btn, .add-tab, .segment-btn, .swatch, .go-btn, .primary-btn, .reset-btn { transition: transform .28s cubic-bezier(.2,.8,.2,1), color .28s ease, background .28s ease, border-color .28s ease, box-shadow .28s ease, filter .28s ease; }
+    .nav-btn:hover, .tool-btn:hover, .add-tab:hover, .segment-btn:hover, .swatch:hover, .reset-btn:hover { transform: translateY(-1px); }
+    .tool-btn:hover svg, .nav-btn:hover svg { filter: drop-shadow(0 0 4px var(--accent-glow)); }
+    .quick-icon { display: grid; place-items: center; width: 37px; height: 37px; flex: 0 0 37px; border-radius: 11px; font-size: 17px; font-weight: 900; color: #fff; border: 1px solid rgba(255,255,255,.10); }
+    .quick-icon.youtube { background: linear-gradient(135deg, #fb3939, #a90e26); }
+    .quick-icon.tiktok { background: linear-gradient(135deg, #232a31, #101317); text-shadow: 2px 1px #ff4c79, -2px -1px #53e5e1; }
+    .quick-icon.discord { background: linear-gradient(135deg, #7d86ff, #5158be); }
+    .quick-icon.twitch { background: linear-gradient(135deg, #9d5bff, #5930a6); }
+    .quick-copy { min-width: 0; }
+    .quick-copy strong { display: block; font-size: 12px; font-weight: 800; }
+    .quick-copy small { display: block; color: var(--muted-2); font-size: 10px; margin-top: 4px; }
+    .home-note { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 43px; color: var(--muted-2); font-size: 11px; text-align: center; }
+    .home-note svg { width: 13px; height: 13px; color: var(--green); }
+
+    .inner-view { padding: 45px 0 70px; }
+    .page-intro { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
+    .page-kicker { color: var(--accent-strong); font-size: 10px; text-transform: uppercase; letter-spacing: .16em; font-weight: 850; }
+    .page-intro h2 { margin: 9px 0 7px; font-size: clamp(29px, 4vw, 42px); letter-spacing: -.06em; }
+    .page-intro p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .browser-window { border: 1px solid var(--line-strong); background: rgba(10, 10, 10, .97); border-radius: 17px; overflow: hidden; box-shadow: var(--shadow); }
+    .browser-window:fullscreen { width: 100vw; height: 100vh; max-width: none; border: 0; border-radius: 0; display: flex; flex-direction: column; background: linear-gradient(180deg, #141414 0%, #080808 100%); }
+    .browser-window:fullscreen .browser-content { flex: 1; min-height: 0; height: auto; }
+    .browser-window:fullscreen #scramjet-frame { height: 100%; min-height: 0; }
+    .browser-window:fullscreen .browser-footer { flex: 0 0 auto; }
+    .browser-tabs { display: flex; align-items: center; gap: 5px; padding: 10px 12px 0; background: rgba(255,255,255,.018); border-bottom: 1px solid var(--line); min-height: 45px; }
+    .browser-tab { display: flex; align-items: center; gap: 9px; min-width: 0; max-width: 220px; padding: 10px 12px; border: 1px solid transparent; border-bottom: 0; border-radius: 9px 9px 0 0; background: transparent; color: var(--muted); font-size: 11px; cursor: pointer; }
+    .browser-tab.active { color: var(--text); background: var(--panel-solid); border-color: var(--line); }
+    .browser-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tab-close { color: var(--muted-2); font-size: 15px; line-height: 1; }
+    .tab-close:hover { color: var(--text); }
+    .add-tab { width: 28px; height: 28px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; font-size: 20px; }
+    .add-tab:hover { background: var(--accent-soft); color: var(--text); }
+    .browser-tools { display: flex; align-items: center; gap: 7px; padding: 12px; border-bottom: 1px solid var(--line); }
+    .tool-btn { width: 31px; height: 31px; border: 1px solid transparent; border-radius: 9px; display: grid; place-items: center; background: transparent; color: var(--muted); cursor: pointer; }
+    .tool-btn:hover { background: rgba(255,255,255,.04); color: var(--text); }
+    .tool-btn svg { width: 15px; height: 15px; }
+    .address-shell { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: rgba(0,0,0,.15); padding: 0 12px; }
+    .address-shell svg { color: var(--green); width: 14px; height: 14px; flex: 0 0 auto; }
+    .address-input { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font-size: 12px; padding: 10px 0; }
+    .browser-content { min-height: 390px; height: min(75vh, 850px); position: relative; display: block; padding: 0; background: #141414; overflow: hidden; }
+    #scramjet-frame { display: none; width: 100%; height: 100%; min-height: 390px; border: 0; background: #fff; }
+    .browser-placeholder { box-sizing: border-box; min-height: 390px; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 24px; margin: 0 auto; }
+    .browser-placeholder { max-width: 475px; text-align: center; }
+    .placeholder-icon { margin: 0 auto 19px; width: 64px; height: 64px; display: grid; place-items: center; border-radius: 20px; border: 1px solid var(--line-strong); background: var(--accent-soft); color: var(--accent-strong); box-shadow: 0 0 35px var(--accent-glow); }
+    .placeholder-icon svg { width: 27px; height: 27px; }
+    .browser-placeholder h3 { margin: 0 0 9px; font-size: 22px; letter-spacing: -.04em; }
+    .browser-placeholder p { margin: 0 auto; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .address-preview { display: inline-flex; max-width: 100%; margin-top: 17px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; color: var(--muted); background: rgba(0,0,0,.12); font-size: 11px; overflow-wrap: anywhere; }
+    .proxy-notice { margin-top: 17px !important; font-size: 11px !important; color: var(--muted-2) !important; }
+    .browser-footer { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-top: 1px solid var(--line); font-size: 10px; color: var(--muted-2); }
+    .browser-footer .footer-spacer { flex: 1; }
+
+    .games-panel, .setting-panel { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .games-empty { min-height: 335px; display: grid; place-items: center; padding: 35px; text-align: center; }
+    .empty-art { width: 74px; height: 74px; margin: 0 auto 20px; border: 1px solid var(--line-strong); border-radius: 23px; display: grid; place-items: center; color: var(--accent-strong); background: var(--accent-soft); box-shadow: 0 0 40px var(--accent-glow); }
+    .empty-art svg { width: 31px; height: 31px; }
+    .games-empty h3 { margin: 0 0 8px; font-size: 22px; letter-spacing: -.04em; }
+    .games-empty p { max-width: 365px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.7; }
+    .settings-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, .82fr); gap: 17px; }
+    .setting-panel { padding: 23px; }
+    .setting-heading { padding-bottom: 17px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
+    .setting-heading h3 { margin: 0 0 6px; font-size: 15px; }
+    .setting-heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+    .setting-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .setting-label strong { display: block; font-size: 12px; }
+    .setting-label small { display: block; margin-top: 5px; color: var(--muted-2); font-size: 11px; line-height: 1.5; }
+    .segmented { display: inline-flex; gap: 4px; border: 1px solid var(--line); border-radius: 11px; background: rgba(0,0,0,.13); padding: 4px; }
+    .segment-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; font-size: 11px; font-weight: 700; }
+    .segment-btn svg { width: 14px; height: 14px; }
+    .segment-btn.active { background: var(--accent-soft); color: var(--text); }
+    .swatches { display: flex; align-items: center; gap: 8px; }
+    .swatch { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; outline: 1px solid transparent; outline-offset: 2px; cursor: pointer; transition: transform .15s; }
+    .swatch:hover { transform: scale(1.1); }
+    .swatch.selected { outline-color: var(--text); }
+    .color-input { width: 29px; height: 29px; padding: 0; border: 0; border-radius: 50%; overflow: hidden; background: transparent; cursor: pointer; }
+    .color-input::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-input::-webkit-color-swatch { border: 1px solid var(--line-strong); border-radius: 50%; }
+    .toggle { width: 39px; height: 23px; padding: 3px; border: 1px solid var(--line-strong); border-radius: 99px; background: rgba(0,0,0,.2); cursor: pointer; transition: background .18s; flex: 0 0 auto; }
+    .toggle::after { content: ""; display: block; width: 15px; height: 15px; border-radius: 50%; background: var(--muted); transition: transform .18s, background .18s; }
+    .toggle[aria-checked="true"] { background: var(--accent); }
+    .toggle[aria-checked="true"]::after { transform: translateX(15px); background: #fff; }
+    .reset-btn { border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 13px; cursor: pointer; background: transparent; color: var(--muted); font-size: 11px; font-weight: 750; }
+    .reset-btn:hover { color: var(--text); background: rgba(255,255,255,.04); }
+    .settings-footnote { margin: 15px 3px 0; color: var(--muted-2); font-size: 11px; line-height: 1.6; }
+
+    footer { width: min(var(--max-width), calc(100% - 56px)); margin: 0 auto; display: flex; justify-content: space-between; gap: 15px; padding: 19px 0 24px; border-top: 1px solid var(--line); color: var(--muted-2); font-size: 10px; }
+    footer .footer-right { display: flex; gap: 15px; align-items: center; }
+    .footer-right span { display: inline-flex; align-items: center; gap: 6px; }
+    .footer-right .mini-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); }
+
+    body.light {
+      color-scheme: light;
+      --bg: #f7eef0; --bg-2: #f3e5e8; --panel: rgba(255, 250, 251, .91); --panel-solid: #fff8fa; --panel-raised: #f4e7ea;
+      --line: color-mix(in srgb, var(--accent) 14%, transparent); --line-strong: color-mix(in srgb, var(--accent) 27%, transparent); --text: color-mix(in srgb, #35101b 92%, var(--accent) 8%); --muted: color-mix(in srgb, #795963 82%, var(--accent) 18%); --muted-2: color-mix(in srgb, #977982 78%, var(--accent) 22%);
+      --shadow: 0 22px 60px rgba(81, 20, 37, .09);
+    }
+    body.light .ambient { background: radial-gradient(ellipse at 50% -18%, var(--accent-glow), transparent 47%), linear-gradient(180deg, rgba(255,250,251,.12), rgba(247,238,240,.58)); }
+    body.light .nav, body.light .search-shell, body.light .browser-window, body.light .browser-tools, body.light .browser-tabs { background-color: rgba(255, 250, 251, .88); }
+    body.light .search-shell { background: linear-gradient(135deg, #fff9fa, #f5e7eb); }
+    body.light .quick-link { background: rgba(255,250,251,.78); }
+    body.light .browser-content { background: radial-gradient(ellipse at 50% 18%, var(--accent-soft), transparent 58%); }
+    body.light .address-shell, body.light .segmented { background: rgba(98, 28, 46, .035); }
+    body.light .keycap { background: rgba(255,255,255,.6); }
+    body.light .browser-footer { background: rgba(255,255,255,.35); }
+
+    body.no-particles #particle-bg { display: none; }
+    body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+
+    @media (max-width: 850px) {
+      .topbar, main, footer { width: min(100% - 34px, var(--max-width)); }
+      .topbar { flex-wrap: wrap; gap: 15px; padding-top: 18px; }
+      .top-actions { margin-left: auto; }
+      .nav { order: 3; width: 100%; justify-content: stretch; }
+      .nav-btn { justify-content: center; flex: 1; }
+      .nav-btn span { display: inline; }
+      .home-view { padding-top: 70px; }
+      .settings-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .topbar, main, footer { width: calc(100% - 28px); }
+      .brand-mark { width: 39px; height: 39px; flex-basis: 39px; border-radius: 13px; }
+      .brand-name { font-size: 17px; }
+      .status-pill { display: none; }
+      .nav-btn { padding: 10px 7px; font-size: 11px; gap: 6px; }
+      .nav-btn svg { width: 14px; height: 14px; }
+      .home-view { padding: 58px 0 56px; }
+      h1 { font-size: clamp(41px, 12vw, 58px); }
+      .hero-copy { max-width: 320px; font-size: 13px; }
+      .search-shell { padding: 6px 6px 6px 13px; border-radius: 14px; gap: 8px; margin-top: 27px; }
+      .search-input { font-size: 13px; }
+      .go-btn { padding: 12px 13px; font-size: 12px; }
+      .quick-section { margin-top: 37px; }
+      .quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .quick-link { padding: 12px 10px; }
+      .quick-icon { width: 34px; height: 34px; flex-basis: 34px; }
+      .home-note { line-height: 1.6; margin-top: 32px; }
+      .inner-view { padding-top: 34px; }
+      .page-intro { display: block; }
+      .page-intro .primary-btn { margin-top: 18px; }
+      .browser-tools { gap: 3px; padding: 8px; }
+      .tool-btn { width: 27px; height: 30px; }
+      .address-shell { padding: 0 8px; }
+      .address-input { font-size: 11px; }
+      .browser-content { min-height: 330px; height: min(72vh, 760px); padding: 0; }
+      #scramjet-frame { min-height: 330px; }
+      .browser-placeholder { min-height: 330px; padding: 35px 18px; }
+      .browser-tabs { padding-left: 7px; padding-right: 7px; }
+      .browser-tab { max-width: 150px; padding: 9px 8px; }
+      .setting-panel { padding: 18px; }
+      .setting-row { align-items: flex-start; flex-wrap: wrap; }
+      .setting-row .swatches, .setting-row .segmented { margin-left: auto; }
+      footer { flex-direction: column; padding-bottom: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-bg" aria-hidden="true"></canvas>
+  <div class="ambient" aria-hidden="true"></div>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="#home" aria-label="Pocket's Arcade home" style="text-decoration:none;color:inherit">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 7.5A2.5 2.5 0 0 1 7.5 5h9A2.5 2.5 0 0 1 19 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 5 16.5v-9Z" stroke="currentColor" stroke-width="1.7"/><path d="m9 9 6 3-6 3V9Z" fill="currentColor"/></svg>
+        </div>
+        <div><div class="brand-name">Pocket's Arcade</div><div class="brand-sub">× Frogie's Arcade</div></div>
+      </a>
+      <nav class="nav" aria-label="Main navigation">
+        <button class="nav-btn active" type="button" data-view="home" aria-current="page"><svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg><span>Browse</span></button>
+        <button class="nav-btn" type="button" data-view="games"><svg viewBox="0 0 24 24" fill="none"><path d="M7 9h10a4 4 0 0 1 3.8 5.25l-.8 2.5a2.3 2.3 0 0 1-3.75 1l-2-1.75h-4.5l-2 1.75a2.3 2.3 0 0 1-3.75-1l-.8-2.5A4 4 0 0 1 7 9Z" stroke="currentColor" stroke-width="1.7"/><path d="M8 11.5v4M6 13.5h4m5-1h.01m3 2h.01" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg><span>Games</span></button>
+        <button class="nav-btn" type="button" data-view="settings"><svg viewBox="0 0 24 24" fill="none"><path d="M12 15.1a3.1 3.1 0 1 0 0-6.2 3.1 3.1 0 0 0 0 6.2Z" stroke="currentColor" stroke-width="1.8"/><path d="m19.4 15 .05.05a1.7 1.7 0 0 1-2.4 2.4l-.05-.05a1.7 1.7 0 0 0-2.9 1.2v.15a1.7 1.7 0 0 1-3.4 0v-.08a1.7 1.7 0 0 0-2.9-1.2l-.05.05a1.7 1.7 0 1 1-2.4-2.4l.05-.05a1.7 1.7 0 0 0-1.2-2.9H4.1a1.7 1.7 0 0 1 0-3.4h.08a1.7 1.7 0 0 0 1.2-2.9l-.05-.05a1.7 1.7 0 1 1 2.4-2.4l.05.05a1.7 1.7 0 0 0 2.9-1.2V4.1a1.7 1.7 0 0 1 3.4 0v.08a1.7 1.7 0 0 0 2.9 1.2l.05-.05a1.7 1.7 0 1 1 2.4 2.4l-.05.05a1.7 1.7 0 0 0 1.2 2.9h.15a1.7 1.7 0 0 1 0 3.4h-.08a1.7 1.7 0 0 0-1.2 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Settings</span></button>
+      </nav>
+      <div class="top-actions"><div class="status-pill"><span class="status-dot"></span> Your corner of the web</div></div>
+    </header>
+
+    <main>
+      <section class="view home-view active" id="view-home" aria-labelledby="hero-title">
+        <div class="hero">
+          <h1 id="hero-title"><span class="headline-accent"><span id="percent-counter">0</span>%</span> ad free<br>internet browsing <span class="headline-accent">proxy</span></h1>
+          <form class="search-shell" id="home-search-form">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            <input class="search-input" id="home-search" type="text" placeholder="Search the web or enter a URL..." autocomplete="off" aria-label="Search the web or enter a URL">
+            <button class="go-btn" type="submit">Search <span aria-hidden="true">↗</span></button>
+          </form>
+
+        </div>
+        <div class="quick-section">
+
+          <div class="quick-grid">
+            <button class="quick-link" type="button" data-url="https://www.youtube.com" data-label="YouTube"><span class="quick-icon youtube">▶</span><span class="quick-copy"><strong>YouTube</strong><small>Videos & creators</small></span></button>
+            <button class="quick-link" type="button" data-url="https://www.tiktok.com" data-label="TikTok"><span class="quick-icon tiktok">♪</span><span class="quick-copy"><strong>TikTok</strong><small>Short videos</small></span></button>
+            <button class="quick-link" type="button" data-url="https://discord.com" data-label="Discord"><span class="quick-icon discord">◉</span><span class="quick-copy"><strong>Discord</strong><small>Communities</small></span></button>
+            <button class="quick-link" type="button" data-url="https://www.twitch.tv" data-label="Twitch"><span class="quick-icon twitch">▰</span><span class="quick-copy"><strong>Twitch</strong><small>Live streams</small></span></button>
+          </div>
+        </div>
+
+      </section>
+
+      <section class="view inner-view" id="view-browser" aria-labelledby="browser-title">
+        <div class="page-intro">
+          <div><div class="page-kicker">Browse / Web window</div><h2 id="browser-title">Your browsing space</h2><p>Searches open here, powered by the Scramjet browser engine.</p></div>
+          <button class="primary-btn" type="button" id="new-tab-intro">＋ New tab</button>
+        </div>
+        <div class="browser-window">
+          <div class="browser-tabs" id="browser-tabs" role="tablist" aria-label="Browser tabs"></div>
+          <div class="browser-tools">
+            <button class="tool-btn" type="button" id="browser-back" aria-label="Back" title="Back"><svg viewBox="0 0 24 24" fill="none"><path d="m14.5 5-7 7 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="tool-btn" type="button" id="browser-forward" aria-label="Forward" title="Forward"><svg viewBox="0 0 24 24" fill="none"><path d="m9.5 5 7 7-7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <button class="tool-btn" type="button" id="browser-refresh" aria-label="Reload" title="Reload"><svg viewBox="0 0 24 24" fill="none"><path d="M20 7v5h-5M4.7 10a7.5 7.5 0 0 1 12.7-3L20 12M4 17v-5h5m10.3 2A7.5 7.5 0 0 1 6.6 17L4 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+            <form class="address-shell" id="address-form"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 21s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12Z" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="9" r="2.3" stroke="currentColor" stroke-width="1.6"/></svg><input class="address-input" id="address-input" type="text" autocomplete="off" aria-label="Browser address"></form>
+            <button class="tool-btn" type="button" id="browser-fullscreen" aria-label="Enter fullscreen" title="Enter fullscreen"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M20 16v4h-4M4 16v4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          </div>
+          <div class="browser-content" id="browser-content" aria-live="polite">
+          <div class="browser-placeholder" id="browser-placeholder">
+            <div class="placeholder-icon"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Z" stroke="currentColor" stroke-width="1.6"/><path d="M3.5 12h17M12 3c2.2 2.4 3.1 5.4 3.1 9s-.9 6.6-3.1 9c-2.2-2.4-3.1-5.4-3.1-9S9.8 5.4 12 3Z" stroke="currentColor" stroke-width="1.4"/></svg></div>
+            <h3 id="browser-placeholder-title">A fresh tab, ready to go</h3>
+            <p id="browser-placeholder-text">Type a search or address in the bar above. The page will load inside this window.</p>
+            <div class="address-preview" id="browser-placeholder-address">Search the web or enter a URL</div>
+            <p class="proxy-notice" id="browser-placeholder-note">Powered by Scramjet. Some websites may block embedded or proxied sessions.</p>
+          </div>
+          <iframe id="scramjet-frame" title="Pocket's Arcade web browser" referrerpolicy="no-referrer" allow="autoplay; fullscreen; clipboard-read; clipboard-write; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
+          <div class="browser-footer"><span class="status-dot"></span><span id="browser-status">Browser layout ready</span><span class="footer-spacer"></span><span>POCKET'S ARCADE</span></div>
+        </div>
+      </section>
+
+      <section class="view inner-view" id="view-games" aria-labelledby="games-title">
+        <div class="page-intro"><div><div class="page-kicker">Your collection</div><h2 id="games-title">Games</h2><p>Your game library will live here. Nothing has been added yet.</p></div></div>
+        <div class="games-panel"><div class="games-empty"><div><div class="empty-art"><svg viewBox="0 0 24 24" fill="none"><path d="M7 9h10a4 4 0 0 1 3.8 5.25l-.8 2.5a2.3 2.3 0 0 1-3.75 1l-2-1.75h-4.5l-2 1.75a2.3 2.3 0 0 1-3.75-1l-.8-2.5A4 4 0 0 1 7 9Z" stroke="currentColor" stroke-width="1.5"/><path d="M8 11.5v4M6 13.5h4m5-1h.01m3 2h.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div><h3>A blank canvas</h3><p>Games will appear here once the library is ready. For now, this space is yours to build.</p></div></div></div>
+      </section>
+
+      <section class="view inner-view" id="view-settings" aria-labelledby="settings-title">
+        <div class="page-intro"><div><div class="page-kicker">Make it yours</div><h2 id="settings-title">Settings</h2><p>Fine-tune the look and feel of Pocket's Arcade.</p></div></div>
+        <div class="settings-layout">
+          <section class="setting-panel">
+            <div class="setting-heading"><h3>Appearance</h3><p>Choose a theme and your signature accent color.</p></div>
+            <div class="setting-row"><div class="setting-label"><strong>Color mode</strong><small>Switch between a dark and light interface.</small></div><div class="segmented" role="group" aria-label="Color mode"><button class="segment-btn active" type="button" data-mode="dark"><svg viewBox="0 0 24 24" fill="none"><path d="M20 15.3A8.2 8.2 0 0 1 8.7 4a8.5 8.5 0 1 0 11.3 11.3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Dark</button><button class="segment-btn" type="button" data-mode="light"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Light</button></div></div>
+            <div class="setting-row"><div class="setting-label"><strong>Accent color</strong><small>Update buttons, highlights, and the glow.</small></div><div class="swatches" role="group" aria-label="Accent color presets"><button class="swatch selected" type="button" data-color="#d83e54" aria-label="Ruby red" title="Ruby red" style="background:#d83e54"></button><button class="swatch" type="button" data-color="#f05b43" aria-label="Ember orange" title="Ember orange" style="background:#f05b43"></button><button class="swatch" type="button" data-color="#a75bff" aria-label="Violet" title="Violet" style="background:#a75bff"></button><button class="swatch" type="button" data-color="#478cff" aria-label="Electric blue" title="Electric blue" style="background:#478cff"></button><button class="swatch" type="button" data-color="#24b985" aria-label="Emerald" title="Emerald" style="background:#24b985"></button><input class="color-input" id="custom-color" type="color" value="#d83e54" aria-label="Choose custom accent color" title="Custom color"></div></div>
+            <div class="setting-row"><div class="setting-label"><strong>Moving background</strong><small>Show or hide the glowing particles.</small></div><button class="toggle" id="particle-toggle" type="button" role="switch" aria-checked="true" aria-label="Moving background"></button></div>
+            <div class="setting-row"><div class="setting-label"><strong>Reduced motion</strong><small>Reduce animated movement across the interface.</small></div><button class="toggle" id="motion-toggle" type="button" role="switch" aria-checked="false" aria-label="Reduced motion"></button></div>
+          </section>
+          <section class="setting-panel">
+            <div class="setting-heading"><h3>About your space</h3><p>A few details about this version of the site.</p></div>
+            <div class="setting-row"><div class="setting-label"><strong>Site name</strong><small>Pocket's Arcade</small></div></div>
+            <div class="setting-row"><div class="setting-label"><strong>Browser</strong><small>Scramjet-powered browser · active frame</small></div></div>
+            <div class="setting-row"><div class="setting-label"><strong>Game library</strong><small>Empty · ready for future additions</small></div></div>
+            <div class="setting-row"><div class="setting-label"><strong>Saved preferences</strong><small>Your appearance settings are saved in this browser.</small></div></div>
+            <div class="setting-row"><div class="setting-label"><strong>Reset customization</strong><small>Restore the original red theme and dark mode.</small></div><button class="reset-btn" id="reset-settings" type="button">Reset settings</button></div>
+            <p class="settings-footnote">Search and quick links currently demonstrate the interface only. Pages will load inside the browser window after the proxy connection is added.</p>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <footer><span>© <span id="year"></span> Pocket's Arcade</span><div class="footer-right"><span><i class="mini-dot"></i> Interface preview</span><span>Built to explore</span></div></footer>
+  </div>
+
+  <script>
+    (() => {
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+      const STORAGE_KEY = 'pockets-arcade-preferences-v1';
+      const defaults = { mode: 'dark', accent: '#d83e54', particles: true, reducedMotion: false };
+      let preferences = { ...defaults };
+      try { preferences = { ...defaults, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') }; } catch (_) {}
+      const views = ['home', 'browser', 'games', 'settings'];
+      let browserTabs = [{ id: 1, title: 'New tab', address: '', loadedUrl: '', history: [], historyIndex: -1 }];
+      let activeTabId = 1;
+      let nextTabId = 2;
+
+      function savePreferences() {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences)); } catch (_) {}
+      }
+      function hexToRgb(hex) {
+        const safe = /^#[0-9a-f]{6}$/i.test(hex) ? hex : defaults.accent;
+        return { r: parseInt(safe.slice(1, 3), 16), g: parseInt(safe.slice(3, 5), 16), b: parseInt(safe.slice(5, 7), 16) };
+      }
+      function applyPreferences() {
+        const rgb = hexToRgb(preferences.accent);
+        document.documentElement.style.setProperty('--accent', preferences.accent);
+        document.documentElement.style.setProperty('--accent-strong', `rgb(${Math.min(255, rgb.r + 30)}, ${Math.min(255, rgb.g + 22)}, ${Math.min(255, rgb.b + 22)})`);
+        document.documentElement.style.setProperty('--accent-glow', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .25)`);
+        document.documentElement.style.setProperty('--accent-soft', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .12)`);
+        document.documentElement.style.setProperty('--line', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .16)`);
+        document.documentElement.style.setProperty('--line-strong', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .30)`);
+        document.body.classList.toggle('light', preferences.mode === 'light');
+        document.body.classList.toggle('no-particles', !preferences.particles);
+        document.body.classList.toggle('reduced-motion', !!preferences.reducedMotion);
+        $$('[data-mode]').forEach(button => button.classList.toggle('active', button.dataset.mode === preferences.mode));
+        $$('.swatch').forEach(button => button.classList.toggle('selected', button.dataset.color.toLowerCase() === preferences.accent.toLowerCase()));
+        $('#custom-color').value = preferences.accent;
+        $('#particle-toggle').setAttribute('aria-checked', String(!!preferences.particles));
+        $('#motion-toggle').setAttribute('aria-checked', String(!!preferences.reducedMotion));
+        const metaTheme = $('meta[name="theme-color"]');
+        if (metaTheme) metaTheme.content = preferences.mode === 'light' ? '#f7eef0' : '#101010';
+        savePreferences();
+      }
+
+      function showView(name) {
+        const target = views.includes(name) ? name : 'home';
+        $$('.view').forEach(view => view.classList.toggle('active', view.id === `view-${target}`));
+        $$('.nav-btn').forEach(button => {
+          const active = button.dataset.view === (target === 'browser' ? 'home' : target);
+          button.classList.toggle('active', active);
+          if (active) button.setAttribute('aria-current', 'page'); else button.removeAttribute('aria-current');
+        });
+        window.scrollTo({ top: 0, behavior: preferences.reducedMotion ? 'auto' : 'smooth' });
+      }
+      $$('.nav-btn').forEach(button => button.addEventListener('click', () => showView(button.dataset.view)));
+      $('.brand').addEventListener('click', event => { event.preventDefault(); showView('home'); });
+
+      function getActiveTab() { return browserTabs.find(tab => tab.id === activeTabId) || browserTabs[0]; }
+      function normalizeAddress(value) {
+        const input = value.trim();
+        if (!input) return { address: '', title: 'New tab', isSearch: false };
+        if (/^https?:\/\//i.test(input)) {
+          try {
+            const parsed = new URL(input);
+            if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+              return { address: parsed.href, title: parsed.hostname.replace(/^www\./, '') || parsed.href, isSearch: false };
+            }
+          } catch (_) {}
+        }
+        if (/^[\w-]+\.[a-z]{2,}([/:?#].*)?$/i.test(input) && !/\s/.test(input)) {
+          const address = `https://${input}`;
+          let title = input;
+          try { title = new URL(address).hostname.replace(/^www\./, ''); } catch (_) {}
+          return { address, title, isSearch: false };
+        }
+        const query = `https://www.google.com/search?q=${encodeURIComponent(input)}`;
+        return { address: query, title: input.length > 20 ? `${input.slice(0, 19)}…` : input, isSearch: true };
+      }
+      function renderBrowserTabs() {
+        const host = $('#browser-tabs'); host.innerHTML = '';
+        browserTabs.forEach(tab => {
+          const button = document.createElement('button');
+          button.className = `browser-tab${tab.id === activeTabId ? ' active' : ''}`;
+          button.type = 'button'; button.setAttribute('role', 'tab'); button.setAttribute('aria-selected', String(tab.id === activeTabId));
+          const title = document.createElement('span'); title.textContent = tab.title || 'New tab'; button.appendChild(title);
+          const close = document.createElement('span'); close.className = 'tab-close'; close.textContent = '×'; close.setAttribute('role', 'button'); close.setAttribute('aria-label', `Close ${tab.title || 'tab'}`); close.title = 'Close tab';
+          close.addEventListener('click', event => { event.stopPropagation(); closeTab(tab.id); }); button.appendChild(close);
+          button.addEventListener('click', () => { activeTabId = tab.id; renderBrowser(); }); host.appendChild(button);
+        });
+        const add = document.createElement('button'); add.className = 'add-tab'; add.type = 'button'; add.textContent = '+'; add.title = 'New tab'; add.setAttribute('aria-label', 'New tab'); add.addEventListener('click', newTab); host.appendChild(add);
+      }
+      function newTab() {
+        const tab = { id: nextTabId++, title: 'New tab', address: '', loadedUrl: '', history: [], historyIndex: -1 };
+        browserTabs.push(tab); activeTabId = tab.id; renderBrowser(); $('#address-input').focus();
+      }
+      function closeTab(id) {
+        if (browserTabs.length === 1) {
+          browserTabs[0] = { id: nextTabId++, title: 'New tab', address: '', loadedUrl: '', history: [], historyIndex: -1 };
+          activeTabId = browserTabs[0].id;
+        } else {
+          const index = browserTabs.findIndex(tab => tab.id === id);
+          browserTabs = browserTabs.filter(tab => tab.id !== id);
+          if (activeTabId === id) activeTabId = browserTabs[Math.max(0, index - 1)].id;
+        }
+        renderBrowser();
+      }
+      let scramjetController = null;
+      let scramjetFrame = null;
+      let scramjetInitPromise = null;
+      let renderedFrameTabId = null;
+
+      function setBrowserPlaceholder(title, message, address, note) {
+        $('#browser-placeholder-title').textContent = title;
+        $('#browser-placeholder-text').textContent = message;
+        $('#browser-placeholder-address').textContent = address;
+        $('#browser-placeholder-note').textContent = note;
+      }
+
+      async function ensureScramjet() {
+        if (scramjetFrame) return scramjetFrame;
+        if (!scramjetInitPromise) {
+          scramjetInitPromise = (async () => {
+            if (typeof window.initBootstrap !== 'function') {
+              throw new Error('Scramjet bootstrap script is unavailable. Check that the server is running with the integrated package.');
+            }
+            scramjetController = await window.initBootstrap();
+            const plugins = [];
+            if (window.$scramjetUtils?.HttpCachePlugin) {
+              plugins.push(new window.$scramjetUtils.HttpCachePlugin());
+            }
+            if (window.$scramjetUtils?.UrlWatcherPlugin) {
+              plugins.push(new window.$scramjetUtils.UrlWatcherPlugin((url) => {
+                try {
+                  const parsed = new URL(url);
+                  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return;
+                  const tab = getActiveTab();
+                  if (!tab) return;
+                  tab.address = parsed.href;
+                  tab.loadedUrl = parsed.href;
+                  $('#address-input').value = parsed.href;
+                  $('#browser-status').textContent = `Connected · ${parsed.hostname}`;
+                } catch (_) {}
+              }));
+            }
+            if (window.$scramjetUtils?.CatchEscapedLinksPlugin) {
+              plugins.push(new window.$scramjetUtils.CatchEscapedLinksPlugin((url) =>
+                new URL(`/?goto=${encodeURIComponent(url.href)}`, location.origin)
+              ));
+            }
+            scramjetFrame = scramjetController.createFrame($('#scramjet-frame'), { plugins });
+            return scramjetFrame;
+          })().catch((error) => {
+            scramjetInitPromise = null;
+            throw error;
+          });
+        }
+        return scramjetInitPromise;
+      }
+
+      async function navigateActiveTab(forceReload = false) {
+        const tab = getActiveTab();
+        const iframe = $('#scramjet-frame');
+        const placeholder = $('#browser-placeholder');
+        if (!tab.address) {
+          iframe.style.display = 'none';
+          placeholder.style.display = 'flex';
+          renderedFrameTabId = tab.id;
+          setBrowserPlaceholder(
+            'A fresh tab, ready to go',
+            'Type a search or address in the bar above. The page will load inside this window.',
+            'Search the web or enter a URL',
+            'Powered by Scramjet. Some websites may block embedded or proxied sessions.'
+          );
+          $('#browser-status').textContent = 'New tab';
+          return;
+        }
+
+        placeholder.style.display = 'none';
+        iframe.style.display = 'block';
+        $('#browser-status').textContent = 'Connecting to Scramjet…';
+        try {
+          const frame = await ensureScramjet();
+          // The active tab may have changed while bootstrap was initializing.
+          const latestTab = getActiveTab();
+          if (!latestTab.address) {
+            iframe.style.display = 'none';
+            placeholder.style.display = 'flex';
+            return;
+          }
+          const mustNavigate = forceReload || renderedFrameTabId !== latestTab.id || latestTab.address !== latestTab.loadedUrl;
+          if (mustNavigate) {
+            const destination = latestTab.address;
+            frame.go(destination);
+            latestTab.loadedUrl = destination;
+            renderedFrameTabId = latestTab.id;
+            let hostname = destination;
+            try { hostname = new URL(destination).hostname; } catch (_) {}
+            $('#browser-status').textContent = `Loading · ${hostname}`;
+          }
+        } catch (error) {
+          iframe.style.display = 'none';
+          placeholder.style.display = 'flex';
+          setBrowserPlaceholder(
+            'Scramjet could not start',
+            error?.message || 'The proxy failed to initialize. Check the Render service logs and deployment settings.',
+            tab.address,
+            'The website design is still available, but browsing needs the server-side Scramjet service to start successfully.'
+          );
+          $('#browser-status').textContent = 'Proxy initialization failed';
+          console.error('Scramjet initialization failed:', error);
+        }
+      }
+
+      function openInBrowser(value, label) {
+        const tab = getActiveTab();
+        const result = normalizeAddress(value);
+        tab.address = result.address;
+        tab.title = label || result.title;
+        tab.isSearch = result.isSearch;
+        tab.history = tab.history.slice(0, tab.historyIndex + 1);
+        tab.history.push({ address: result.address, title: tab.title, isSearch: result.isSearch });
+        tab.historyIndex = tab.history.length - 1;
+        renderBrowser();
+        showView('browser');
+      }
+
+      function renderBrowser() {
+        const tab = getActiveTab();
+        renderBrowserTabs();
+        $('#address-input').value = tab.address || '';
+        $('#browser-back').disabled = !tab.address && tab.historyIndex <= 0;
+        $('#browser-forward').disabled = !tab.address && tab.historyIndex >= tab.history.length - 1;
+        $('#browser-back').style.opacity = $('#browser-back').disabled ? '.36' : '1';
+        $('#browser-forward').style.opacity = $('#browser-forward').disabled ? '.36' : '1';
+        navigateActiveTab();
+      }
+            $('#home-search-form').addEventListener('submit', event => { event.preventDefault(); const value = $('#home-search').value; if (value.trim()) openInBrowser(value); });
+      $$('.quick-link').forEach(button => button.addEventListener('click', () => openInBrowser(button.dataset.url, button.dataset.label)));
+      $('#address-form').addEventListener('submit', event => { event.preventDefault(); const value = $('#address-input').value; if (value.trim()) openInBrowser(value); });
+      $('#new-tab-intro').addEventListener('click', newTab);
+      const browserWindow = $('.browser-window');
+      const fullscreenButton = $('#browser-fullscreen');
+      function updateFullscreenButton() {
+        const isFullscreen = document.fullscreenElement === browserWindow;
+        fullscreenButton.setAttribute('aria-label', isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen');
+        fullscreenButton.title = isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen';
+        fullscreenButton.innerHTML = isFullscreen
+          ? '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 8h4V4M16 4v4h4M20 16h-4v4M8 20v-4H4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4M16 4h4v4M20 16v4h-4M4 16v4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      }
+      fullscreenButton.addEventListener('click', async () => {
+        try {
+          if (document.fullscreenElement === browserWindow) await document.exitFullscreen();
+          else if (browserWindow.requestFullscreen) await browserWindow.requestFullscreen();
+          else $('#browser-status').textContent = 'Fullscreen is not supported by this browser';
+        } catch (_) {
+          $('#browser-status').textContent = 'Fullscreen was blocked by the browser';
+        }
+      });
+      document.addEventListener('fullscreenchange', updateFullscreenButton);
+      $('#browser-refresh').addEventListener('click', () => {
+        const tab = getActiveTab();
+        if (!tab.address) { renderBrowser(); return; }
+        if (scramjetFrame) {
+          try { scramjetFrame.reload(); $('#browser-status').textContent = 'Reloading page…'; }
+          catch (_) { navigateActiveTab(true); }
+        } else navigateActiveTab(true);
+      });
+      $('#browser-back').addEventListener('click', () => {
+        const tab = getActiveTab();
+        if (tab.historyIndex > 0) {
+          tab.historyIndex--;
+          const item = tab.history[tab.historyIndex];
+          tab.address = item.address; tab.title = item.title; tab.isSearch = item.isSearch;
+          renderBrowser();
+        } else if (scramjetFrame && tab.address) {
+          try { scramjetFrame.back(); $('#browser-status').textContent = 'Going back…'; } catch (_) {}
+        }
+      });
+      $('#browser-forward').addEventListener('click', () => {
+        const tab = getActiveTab();
+        if (tab.historyIndex < tab.history.length - 1) {
+          tab.historyIndex++;
+          const item = tab.history[tab.historyIndex];
+          tab.address = item.address; tab.title = item.title; tab.isSearch = item.isSearch;
+          renderBrowser();
+        } else if (scramjetFrame && tab.address) {
+          try { scramjetFrame.forward(); $('#browser-status').textContent = 'Going forward…'; } catch (_) {}
+        }
+      });
+
+      $$('[data-mode]').forEach(button => button.addEventListener('click', () => { preferences.mode = button.dataset.mode; applyPreferences(); }));
+      $$('.swatch').forEach(button => button.addEventListener('click', () => { preferences.accent = button.dataset.color; applyPreferences(); }));
+      $('#custom-color').addEventListener('input', event => { preferences.accent = event.target.value; applyPreferences(); });
+      $('#particle-toggle').addEventListener('click', () => { preferences.particles = !preferences.particles; applyPreferences(); });
+      $('#motion-toggle').addEventListener('click', () => { preferences.reducedMotion = !preferences.reducedMotion; applyPreferences(); });
+      $('#reset-settings').addEventListener('click', () => { preferences = { ...defaults }; applyPreferences(); });
+      $('#year').textContent = new Date().getFullYear();
+      applyPreferences(); renderBrowser();
+      const escapedGoto = new URLSearchParams(location.search).get('goto');
+      if (escapedGoto) { history.replaceState(null, '', location.pathname); openInBrowser(escapedGoto); }
+
+      // Smoothly count the headline percentage from 0 to 100 on load.
+      const percentCounter = $('#percent-counter');
+      if (percentCounter) {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches || preferences.reducedMotion;
+        if (reduced) percentCounter.textContent = '100';
+        else {
+          const start = performance.now();
+          const duration = 1900;
+          function countPercent(now) {
+            const progress = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            percentCounter.textContent = String(Math.round(eased * 100));
+            if (progress < 1) requestAnimationFrame(countPercent);
+          }
+          requestAnimationFrame(countPercent);
+        }
+      }
+
+      // Lightweight background particles: no external libraries or network calls.
+      const canvas = $('#particle-bg'); const ctx = canvas.getContext('2d');
+      let width = 0, height = 0, dpr = 1, particles = [], frame = 0;
+      const particleCount = () => Math.min(85, Math.max(28, Math.floor((width * height) / 19000)));
+      function resizeCanvas() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2); width = window.innerWidth; height = window.innerHeight;
+        canvas.width = Math.floor(width * dpr); canvas.height = Math.floor(height * dpr); canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        const count = particleCount();
+        while (particles.length < count) particles.push(createParticle(true));
+        if (particles.length > count) particles.length = count;
+      }
+      function createParticle(randomY = false) {
+        return { x: Math.random() * width, y: randomY ? Math.random() * height : height + Math.random() * 35,
+          radius: .8 + Math.random() * 2.1, speed: .12 + Math.random() * .5, drift: (Math.random() - .5) * .26,
+          alpha: .2 + Math.random() * .55, phase: Math.random() * Math.PI * 2, pulse: .006 + Math.random() * .015 };
+      }
+      function drawParticles() {
+        frame = requestAnimationFrame(drawParticles);
+        if (preferences.reducedMotion || !preferences.particles) { ctx.clearRect(0, 0, width, height); return; }
+        ctx.clearRect(0, 0, width, height);
+        const color = hexToRgb(preferences.accent);
+        particles.forEach(p => {
+          p.y -= p.speed; p.x += p.drift + Math.sin(p.phase) * .09; p.phase += p.pulse;
+          if (p.y < -15) { p.y = height + 15; p.x = Math.random() * width; }
+          if (p.x < -12) p.x = width + 12; if (p.x > width + 12) p.x = -12;
+          const glowAlpha = p.alpha * (.65 + (Math.sin(p.phase) + 1) * .17);
+          const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.radius * 5);
+          glow.addColorStop(0, `rgba(${color.r},${color.g},${color.b},${glowAlpha})`);
+          glow.addColorStop(1, `rgba(${color.r},${color.g},${color.b},0)`);
+          ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * 5, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = `rgba(${Math.min(255, color.r + 90)},${Math.min(255, color.g + 55)},${Math.min(255, color.b + 55)},${Math.min(.95, glowAlpha + .14)})`;
+          ctx.beginPath(); ctx.arc(p.x, p.y, p.radius * .68, 0, Math.PI * 2); ctx.fill();
+        });
+      }
+      window.addEventListener('resize', resizeCanvas, { passive: true });
+      resizeCanvas(); drawParticles();
+      document.addEventListener('visibilitychange', () => { if (document.hidden) cancelAnimationFrame(frame); else drawParticles(); });
+    })();
+  </script>
+</body>
+</html>
